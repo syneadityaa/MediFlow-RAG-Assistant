@@ -18,7 +18,7 @@ MEDICAL_REFUSAL = (
 )
 
 # Keep the model supplied at launch (GEMINI_MODEL) first. These are fallbacks.
-DEFAULT_MODELS = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-2.5-flash-lite"]
+DEFAULT_MODELS = ["gemini-3.5-flash", "gemini-3.5-flash", "gemini-2.5-flash-lite"]
 
 FLOWCHART_OPEN = "<FLOWCHART>"
 FLOWCHART_CLOSE = "</FLOWCHART>"
