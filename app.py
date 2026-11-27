@@ -1,5 +1,7 @@
 """MediFlow AI Assistant - blue, ChatGPT-style Streamlit interface."""
 
+"""MediFlow AI Assistant - blue, ChatGPT-style Streamlit interface."""
+
 import html
 import os
 from pathlib import Path
@@ -18,6 +20,24 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+
+def get_config_value(name: str):
+    """Read a setting from environment variables or Streamlit secrets."""
+    value = os.getenv(name)
+    if value:
+        return value.strip()
+    try:
+        value = st.secrets.get(name)
+        return str(value).strip() if value else None
+    except Exception:
+        return None
+
+
+# Allow GEMINI_MODEL to be configured in Streamlit Community Cloud secrets too.
+configured_model = get_config_value("GEMINI_MODEL")
+if configured_model:
+    os.environ["GEMINI_MODEL"] = configured_model
 
 # ---------------- DESIGN ----------------
 
@@ -260,13 +280,7 @@ except Exception as exc:
 
 
 def get_api_key():
-    key = os.getenv("GEMINI_API_KEY")
-    if key:
-        return key
-    try:
-        return st.secrets.get("GEMINI_API_KEY")
-    except Exception:
-        return None
+    return get_config_value("GEMINI_API_KEY")
 
 
 api_key = get_api_key()
