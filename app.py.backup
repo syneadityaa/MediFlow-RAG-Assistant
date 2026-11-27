@@ -1,0 +1,689 @@
+
+
+"""MediFlow AI Assistant - ChatGPT-style Streamlit interface."""
+
+import os
+import html
+from pathlib import Path
+
+import streamlit as st
+from dotenv import load_dotenv
+
+from src.rag_pipeline import RAGPipeline
+
+load_dotenv()
+KB_DIR = Path(__file__).parent / "knowledge_base"
+
+st.set_page_config(
+    page_title="MediFlow AI",
+    page_icon="🩺",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ---------------- BLUE THEME & DESIGN ----------------
+
+st.markdown("""
+<style>
+:root {
+    color-scheme: light;
+
+    --blue: #3478D4;
+    --blue-dark: #245BA8;
+    --blue-light: #E3EEFF;
+
+    --ink: #263D59;
+    --muted: #687F9D;
+
+    --border: #DCE7F5;
+    --page: #F3F7FD;
+    --white: #FFFFFF;
+}
+
+/* Main application */
+
+html, body,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+.stApp {
+    background: var(--page) !important;
+    color: var(--ink) !important;
+}
+
+header[data-testid="stHeader"] {
+    background: rgba(243, 247, 253, 0.96) !important;
+}
+
+[data-testid="stMainBlockContainer"] {
+    max-width: 900px;
+    padding-top: 1.5rem;
+    padding-bottom: 7rem;
+}
+
+/* Hide default Streamlit branding */
+
+#MainMenu,
+footer,
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"] {
+    display: none !important;
+}
+
+/* ---------------- SIDEBAR ---------------- */
+
+section[data-testid="stSidebar"] {
+    background: #EAF1FB !important;
+    border-right: 1px solid #D9E5F4 !important;
+}
+
+section[data-testid="stSidebar"] > div {
+    padding: 1.2rem 1rem;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 8px 4px 22px;
+}
+
+.sidebar-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: #D8E8FF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 23px;
+}
+
+.sidebar-name {
+    color: #245BA8 !important;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.sidebar-caption {
+    color: #68809F !important;
+    font-size: 12px;
+}
+
+.sidebar-label {
+    color: #6682A5 !important;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.1px;
+    margin: 22px 0 11px;
+}
+
+.document-item {
+    padding: 10px 11px;
+    margin: 6px 0;
+    background: #F7FAFF;
+    border: 1px solid #DCE7F5;
+    border-radius: 9px;
+    font-size: 12px;
+    color: #355578 !important;
+}
+
+.sidebar-note {
+    font-size: 12px;
+    color: #536D8D !important;
+    line-height: 1.8;
+}
+
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] .stMarkdown p,
+section[data-testid="stSidebar"] .stCaption,
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+    color: #405B7C !important;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+section[data-testid="stSidebar"] h3 {
+    color: #294D77 !important;
+    font-size: 17px !important;
+}
+
+/* Sidebar buttons */
+
+section[data-testid="stSidebar"] .stButton > button {
+    min-height: 43px;
+    border-radius: 11px !important;
+    font-size: 14px !important;
+    font-weight: 650 !important;
+}
+
+/* ---------------- TOP BAR ---------------- */
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 0 17px;
+    border-bottom: 1px solid #DCE7F5;
+    margin-bottom: 25px;
+}
+
+.topbar-brand {
+    color: #245BA8 !important;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.topbar-status {
+    color: #2863B0 !important;
+    background: #E5F0FF;
+    border: 1px solid #D1E2FA;
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ---------------- WELCOME SCREEN ---------------- */
+
+.welcome {
+    text-align: center;
+    padding: 65px 15px 28px;
+}
+
+.welcome-icon {
+    height: 68px;
+    width: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #DFEBFF;
+    border: 1px solid #D2E2FA;
+    border-radius: 21px;
+    font-size: 34px;
+    margin: 0 auto 22px;
+}
+
+.welcome h1 {
+    color: #244D83 !important;
+    font-size: 32px !important;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    margin-bottom: 12px;
+}
+
+.welcome p {
+    color: #627B9D !important;
+    font-size: 16px !important;
+    line-height: 1.8;
+}
+
+.suggestion-heading {
+    color: #365A86 !important;
+    font-size: 14px;
+    font-weight: 750;
+    margin: 20px 0 12px;
+}
+
+/* ---------------- BUTTONS ---------------- */
+
+.stButton > button {
+    background: #FFFFFF !important;
+    color: #315D91 !important;
+    border: 1px solid #D5E3F5 !important;
+    border-radius: 12px !important;
+    min-height: 58px;
+    font-size: 14px !important;
+    font-weight: 650 !important;
+    text-align: left !important;
+    transition: all .2s ease;
+}
+
+.stButton > button:hover {
+    background: #E6F0FF !important;
+    border-color: #9DBDEB !important;
+    color: #245BA8 !important;
+}
+
+/* ---------------- CHAT MESSAGES ---------------- */
+
+/* Assistant message area */
+
+div[data-testid="stChatMessage"] {
+    background: #FFFFFF !important;
+    border: 1px solid #E1EAF5 !important;
+    border-radius: 15px !important;
+    box-shadow: 0 2px 9px rgba(35, 75, 120, .035);
+    padding: 17px 20px !important;
+    margin: 12px 0 15px !important;
+    gap: 13px !important;
+}
+
+/* Assistant answer typography */
+
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"],
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li,
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span {
+    color: #30465F !important;
+    opacity: 1 !important;
+    font-size: 15.5px !important;
+    line-height: 1.9 !important;
+}
+
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] strong {
+    color: #245BA8 !important;
+    font-size: 15.5px !important;
+    font-weight: 750 !important;
+}
+
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h1 {
+    color: #244D83 !important;
+    font-size: 26px !important;
+}
+
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h2 {
+    color: #244D83 !important;
+    font-size: 23px !important;
+}
+
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] h3 {
+    color: #315F98 !important;
+    font-size: 19px !important;
+}
+
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] ul,
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] ol {
+    padding-left: 25px;
+}
+
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li {
+    margin-bottom: 7px;
+}
+
+/* Inline code */
+
+div[data-testid="stChatMessage"] code {
+    color: #245BA8 !important;
+    background: #EDF3FC !important;
+    border-radius: 5px;
+    padding: 2px 5px;
+}
+
+/* Code blocks */
+
+div[data-testid="stChatMessage"] pre {
+    background: #EDF3FC !important;
+    border: 1px solid #DCE7F5;
+    border-radius: 10px;
+}
+
+div[data-testid="stChatMessage"] pre code {
+    color: #30465F !important;
+    background: transparent !important;
+}
+
+/* ---------------- USER MESSAGE BUBBLE ---------------- */
+
+.user-row {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin: 15px 0 20px;
+}
+
+.user-bubble {
+    background: #DFEBFF;
+    border: 1px solid #D0E1FB;
+    color: #244E83 !important;
+    padding: 14px 19px;
+    border-radius: 18px 18px 4px 18px;
+    max-width: 78%;
+    font-size: 15.5px;
+    line-height: 1.85;
+    overflow-wrap: anywhere;
+}
+
+/* ---------------- SOURCES ---------------- */
+
+div[data-testid="stExpander"] {
+    background: #F7FAFF !important;
+    border: 1px solid #DCE7F5 !important;
+    border-radius: 11px !important;
+    margin-top: 12px;
+}
+
+div[data-testid="stExpander"] summary,
+div[data-testid="stExpander"] summary span {
+    color: #38669D !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+div[data-testid="stExpander"] [data-testid="stMarkdownContainer"],
+div[data-testid="stExpander"] [data-testid="stMarkdownContainer"] * {
+    color: #405B7C !important;
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+}
+
+/* ---------------- MESSAGE COMPOSER ---------------- */
+
+[data-testid="stBottom"] {
+    background: rgba(243, 247, 253, .97) !important;
+    border-top: 1px solid #DCE7F5 !important;
+}
+
+[data-testid="stBottom"] > div {
+    max-width: 900px !important;
+    padding-top: 12px !important;
+}
+
+[data-testid="stChatInput"] {
+    background: #FFFFFF !important;
+    border: 1px solid #C9D9EF !important;
+    border-radius: 17px !important;
+    box-shadow: 0 4px 18px rgba(35, 75, 120, .08) !important;
+}
+
+[data-testid="stChatInput"] textarea {
+    color: #263D59 !important;
+    -webkit-text-fill-color: #263D59 !important;
+    background: #FFFFFF !important;
+    font-size: 15.5px !important;
+}
+
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #879BB5 !important;
+    -webkit-text-fill-color: #879BB5 !important;
+}
+
+[data-testid="stChatInput"] button {
+    background: #3478D4 !important;
+    color: #FFFFFF !important;
+    border-radius: 10px !important;
+}
+
+/* ---------------- LINKS & DIVIDERS ---------------- */
+
+.stApp a {
+    color: #286AC0 !important;
+}
+
+hr {
+    border-color: #DCE7F5 !important;
+}
+
+/* ---------------- RESPONSIVE ---------------- */
+
+@media (max-width: 700px) {
+    [data-testid="stMainBlockContainer"] {
+        padding: 1rem 1rem 6rem;
+    }
+
+    .welcome {
+        padding-top: 35px;
+    }
+
+    .welcome h1 {
+        font-size: 25px !important;
+    }
+
+    .user-bubble {
+        max-width: 90%;
+    }
+
+    .topbar-status {
+        font-size: 9px;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+# ---------------- LOAD RAG PIPELINE ----------------
+
+@st.cache_resource(show_spinner="Loading MediFlow knowledge base...")
+def load_pipeline():
+    pipeline = RAGPipeline(KB_DIR)
+    pipeline.build_index()
+    return pipeline
+
+
+try:
+    pipeline = load_pipeline()
+except Exception as exc:
+    st.error(f"Could not build knowledge base: {exc}")
+    st.stop()
+
+
+# ---------------- API KEY ----------------
+
+def get_api_key():
+    key = os.getenv("GEMINI_API_KEY")
+
+    if key:
+        return key
+
+    try:
+        return st.secrets.get("GEMINI_API_KEY")
+    except Exception:
+        return None
+
+
+api_key = get_api_key()
+
+
+# ---------------- SESSION STATE ----------------
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+
+# ---------------- SIDEBAR ----------------
+
+with st.sidebar:
+
+    st.markdown("""
+    <div class="sidebar-brand">
+        <div class="sidebar-logo">🩺</div>
+        <div>
+            <div class="sidebar-name">MediFlow AI</div>
+            <div class="sidebar-caption">Your project assistant</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("＋  New chat", use_container_width=True):
+        st.session_state.messages = []
+        st.rerun()
+
+    st.markdown(
+        '<div class="sidebar-label">YOUR KNOWLEDGE BASE</div>',
+        unsafe_allow_html=True,
+    )
+
+    with st.expander(
+        f"📚 Documents ({len(pipeline.list_documents())})",
+        expanded=False,
+    ):
+        for name in pipeline.list_documents():
+            st.markdown(
+                f'<div class="document-item">'
+                f'📄 &nbsp; {html.escape(name)}</div>',
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("---")
+
+    st.markdown(
+        '<div class="sidebar-label">ABOUT MEDIFLOW AI</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="sidebar-note">'
+        'An intelligent assistant for the MediFlow Smart Medical '
+        'Appointment & Queue Optimization System.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("---")
+
+    st.markdown(
+        '<div class="sidebar-note">'
+        'Answers are grounded in project documents. '
+        'Medical diagnosis and treatment advice are not provided.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    if not api_key:
+        st.warning("GEMINI_API_KEY not found. Check your .env file.")
+
+
+# ---------------- TOP BAR ----------------
+
+st.markdown("""
+<div class="topbar">
+    <div class="topbar-brand">🩺 &nbsp; MediFlow Assistant</div>
+    <div class="topbar-status">● Knowledge base connected</div>
+</div>
+""", unsafe_allow_html=True)
+
+
+# ---------------- WELCOME SCREEN ----------------
+
+if not st.session_state.messages:
+
+    st.markdown("""
+    <div class="welcome">
+        <div class="welcome-icon">🩺</div>
+        <h1>How can I help you today?</h1>
+        <p>
+            Ask me anything about MediFlow. I'll find answers
+            from the project's documentation.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(
+        '<div class="suggestion-heading">Explore MediFlow</div>',
+        unsafe_allow_html=True,
+    )
+
+    examples = [
+        "How do I register on MediFlow?",
+        "How do I book an appointment?",
+        "What does CHECKED_IN mean?",
+        "How can doctors manage appointments?",
+    ]
+
+    col1, col2 = st.columns(2)
+
+    for i, example in enumerate(examples):
+
+        with (col1 if i % 2 == 0 else col2):
+
+            if st.button(
+                example,
+                key=f"suggestion_{i}",
+                use_container_width=True,
+            ):
+                st.session_state.pending = example
+                st.rerun()
+
+
+# ---------------- MESSAGE RENDERING ----------------
+
+def render_user_message(content):
+    safe_content = html.escape(content).replace("\n", "<br>")
+
+    st.markdown(
+        f'<div class="user-row">'
+        f'<div class="user-bubble">{safe_content}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def render_sources(sources):
+
+    if not sources:
+        return
+
+    with st.expander("📚 Sources used"):
+
+        for source in sources:
+            filename = html.escape(source["source"])
+            heading = html.escape(source["heading"])
+
+            st.markdown(
+                f"- **{filename}** — {heading} "
+                f"*(match: {source['score']:.2f})*"
+            )
+
+
+# ---------------- CHAT HISTORY ----------------
+
+for msg in st.session_state.messages:
+
+    if msg["role"] == "user":
+
+        render_user_message(msg["content"])
+
+    else:
+
+        with st.chat_message("assistant", avatar="🩺"):
+            st.markdown(msg["content"])
+            render_sources(msg.get("sources", []))
+
+
+# ---------------- USER INPUT ----------------
+
+pending_question = st.session_state.pop("pending", None)
+
+question = st.chat_input("Message MediFlow AI...") or pending_question
+
+if question:
+
+    history = list(st.session_state.messages)
+
+    st.session_state.messages.append({
+        "role": "user",
+        "content": question,
+    })
+
+    render_user_message(question)
+
+    with st.chat_message("assistant", avatar="🩺"):
+
+        with st.spinner("Looking through MediFlow documentation..."):
+
+            try:
+                result = pipeline.answer(
+                    question,
+                    history=history,
+                    api_key=api_key,
+                )
+
+                answer = result["answer"]
+                sources = result["sources"]
+
+            except Exception as exc:
+
+                answer = (
+                    "Sorry, I couldn't generate an answer right now.\n\n"
+                    f"**Error:** {exc}"
+                )
+
+                sources = []
+
+        st.markdown(answer)
+        render_sources(sources)
+
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": answer,
+        "sources": sources,
+    })
