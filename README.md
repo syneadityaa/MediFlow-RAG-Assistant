@@ -1,184 +1,229 @@
-# MediFlow AI Assistant 🤖
+# 🩺 MediFlow AI Assistant
+### Your Intelligent Guide to the MediFlow Appointment & Queue Management Platform
 
-### An AI-powered RAG chatbot for the MediFlow healthcare appointment platform
+<p align="center">
+  <a href="https://mediflow-rag-assistant.streamlit.app/"><strong>🚀 LIVE DEMO</strong></a> •
+  <a href="https://github.com/syneadityaa/MediFlow-RAG-Assistant"><strong>💻 GITHUB REPOSITORY</strong></a>
+</p>
 
-MediFlow AI Assistant is an intelligent chatbot designed to help users understand the features and workflows of the MediFlow application.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python" />
+  <img src="https://img.shields.io/badge/Framework-Streamlit-FF4B4B?logo=streamlit" />
+  <img src="https://img.shields.io/badge/LLM-Google%20Gemini-4285F4?logo=google" />
+  <img src="https://img.shields.io/badge/Architecture-RAG-purple" />
+  <img src="https://img.shields.io/badge/Status-Live%20Deployment-success" />
+</p>
 
-Built using **Python, Streamlit, Google Gemini, and Retrieval-Augmented Generation (RAG)**, it retrieves relevant information from a dedicated knowledge base before generating answers.
+---
 
-The goal is to make MediFlow's documentation easier to access through a conversational AI interface.
+## 🌟 Overview
 
-## ✨ Features
+**MediFlow AI Assistant** is an intelligent, document-grounded chatbot built to help users understand and navigate the MediFlow Smart Medical Appointment & Queue Optimization System.
 
-- **Context-aware Q&A:** Answers questions using MediFlow-specific documentation.
-- **Retrieval-Augmented Generation:** Retrieves relevant knowledge before generating responses.
-- **Semantic Search:** Finds relevant content based on the meaning of a question.
-- **Gemini-powered Responses:** Generates natural-language answers using Google's Gemini API.
-- **Document Processing:** Supports PDF text extraction.
-- **Dedicated Knowledge Base:** Organizes information about registration, authentication, doctors, appointments, queues, and dashboards.
-- **Interactive Chat Interface:** Provides a simple interface using Streamlit.
+Powered by **Retrieval-Augmented Generation (RAG)** and Google's Gemini API, the assistant retrieves relevant information from project documentation and uses it to generate natural, context-aware responses.
+
+Instead of relying entirely on general-purpose AI knowledge, it uses a dedicated MediFlow knowledge base to answer questions about platform features, workflows, and functionality.
+
+The assistant also generates visual flowcharts to make complex processes easier to understand.
+
+<p align="center">
+  <strong>Ask questions. Understand workflows. Explore MediFlow.</strong>
+</p>
+
+## 🚀 Live Application
+
+**Try it here:** https://mediflow-rag-assistant.streamlit.app/
+
+The application is deployed and accessible through Streamlit Community Cloud.
+
+## ✨ Key Features
+
+| Feature | Description |
+|---|---|
+| 🧠 RAG-Based Question Answering | Retrieves relevant project information before generating responses. |
+| 💬 Natural Conversations | Handles greetings, casual interactions, and contextual questions. |
+| 📚 Knowledge-Grounded Responses | Uses MediFlow project documentation as its information source. |
+| 📊 Flowchart Generation | Converts supported workflows into visual step-by-step flowcharts. |
+| 🔍 Document Retrieval | Uses semantic embeddings and vector similarity search to find relevant information. |
+| 🛡️ Safety-Aware Responses | Avoids providing medical diagnosis or treatment advice. |
+| 🎨 Interactive Interface | Provides a clean, conversational Streamlit interface. |
+
+## 🏗️ How It Works
+
+The assistant follows a Retrieval-Augmented Generation pipeline.
+
+```mermaid
+flowchart TD
+    A["User asks a question"] --> B["Query Processing"]
+    B --> C["Generate Query Embeddings"]
+    C --> D["FAISS Vector Search"]
+    D --> E["Retrieve Relevant Document Chunks"]
+    E --> F["Construct Context"]
+    F --> G["Google Gemini API"]
+    G --> H["Generate Grounded Response"]
+    H --> I["Display Answer and Sources"]
+    H --> J["Generate Flowchart When Applicable"]
+```
+
+### RAG Pipeline Explained
+
+1. **Document Loading:** MediFlow documentation is loaded from the knowledge base.
+2. **Text Chunking:** Documents are divided into smaller, manageable text chunks.
+3. **Embedding Generation:** Sentence Transformers converts text into numerical vector representations.
+4. **Vector Storage:** FAISS stores and indexes embeddings for efficient similarity search.
+5. **Retrieval:** When a user asks a question, relevant document chunks are retrieved.
+6. **Contextual Generation:** Retrieved information is passed to Google Gemini to generate a natural-language answer.
+7. **Response Presentation:** The application displays the answer, relevant sources, and flowcharts where applicable.
 
 ## 🛠️ Technology Stack
 
 | Technology | Purpose |
 |---|---|
-| Python | Application development |
-| Streamlit | Chat interface |
-| Google Gemini API | Response generation |
-| Sentence Transformers | Text embeddings |
-| FAISS | Vector similarity search |
+| Python | Core application and RAG pipeline |
+| Streamlit | Interactive chatbot interface |
+| Google Gemini API | Large Language Model for response generation |
+| Sentence Transformers | Text embedding generation |
+| FAISS | Vector indexing and similarity search |
 | NumPy | Numerical operations |
-| PyPDF | PDF text extraction |
+| PyPDF | PDF document processing |
+| Python Dotenv | Environment variable management |
 
-## 🧠 How It Works
-
-The application follows a Retrieval-Augmented Generation pipeline.
-
-```text
-MediFlow Documentation
-         |
-         v
-   Document Loading
-         |
-         v
-    Text Chunking
-         |
-         v
-  Embedding Generation
-         |
-         v
-    FAISS Vector Store
-         |
-         |
- User Question
-         |
-         v
-  Query Embedding
-         |
-         v
-  Semantic Retrieval
-         |
-         v
- Relevant Context
-         |
-         v
-    Gemini API
-         |
-         v
-   AI-generated Answer
-```
-
-### RAG Pipeline
-
-1. **Document Loading:** Loads information from the MediFlow knowledge base and supported PDF documents.
-2. **Text Chunking:** Divides documents into smaller sections.
-3. **Embedding Generation:** Converts text into numerical vector representations.
-4. **Vector Storage:** Stores embeddings for similarity-based retrieval.
-5. **Semantic Retrieval:** Finds relevant information for the user's question.
-6. **Response Generation:** Uses the retrieved context to generate an answer through Gemini.
-
-## 📁 Project Structure
+## 📂 Project Structure
 
 ```text
 MediFlow-RAG-Assistant/
 │
-├── assets/
-├── knowledge_base/
-├── src/
-│
 ├── app.py
+│
+├── src/
+│   ├── rag_pipeline.py
+│   ├── embeddings.py
+│   ├── vector_store.py
+│   ├── document_loader.py
+│   └── text_chunker.py
+│
+├── knowledge_base/
+│   └── MediFlow project documents
+│
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
 └── README.md
 ```
 
-## ⚙️ Installation and Setup
+## ⚙️ Run Locally
+
+Follow these steps to run the application on your machine.
 
 ### 1. Clone the repository
 
 ```bash
 git clone https://github.com/syneadityaa/MediFlow-RAG-Assistant.git
+```
+
+### 2. Navigate to the project directory
+
+```bash
 cd MediFlow-RAG-Assistant
 ```
 
-### 2. Create a virtual environment
-
-Python 3.11 is recommended.
+### 3. Create a virtual environment
 
 ```bash
-python3.11 -m venv .venv
+python3 -m venv .venv
+```
+
+Activate it:
+
+**macOS / Linux**
+```bash
 source .venv/bin/activate
 ```
 
-### 3. Install dependencies
+**Windows**
+```bash
+.venv\Scripts\activate
+```
+
+### 4. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure the Gemini API key
+### 5. Configure environment variables
 
-Create a `.env` file in the project root using `.env.example` as a reference.
+Create a `.env` file in the project root:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-Get your API key from [Google AI Studio](https://aistudio.google.com/).
+Obtain your API key from [Google AI Studio](https://aistudio.google.com/).
 
-**Security:** Never upload your actual `.env` file or API key to GitHub.
+Never upload your actual API key or `.env` file to GitHub.
 
-### 5. Run the application
+### 6. Launch the application
 
 ```bash
 streamlit run app.py
 ```
 
-Open the local URL displayed in your terminal, usually:
+The application will open in your browser.
 
-`http://localhost:8501`
+## 💡 Example Questions
 
-## 💬 Example Questions
+Try asking the assistant:
 
 - How do I register on MediFlow?
-- How can I search for doctors?
-- How do I book an appointment?
-- How does the appointment queue work?
-- Can patients cancel appointments?
-- What features are available in the doctor dashboard?
+- How can a patient search for doctors?
+- Explain the appointment booking process.
+- How does the queue management system work?
+- What can doctors do through their dashboard?
+- How does appointment cancellation work?
 
-## 🔒 Scope and Limitations
+The assistant can also present supported workflows as visual flowcharts.
 
-MediFlow AI Assistant is intended to provide information about the MediFlow application.
+## 🛡️ Responsible AI & Limitations
 
-- It is not a medical diagnosis or treatment assistant.
-- It does not prescribe medicines or recommend treatments.
-- Its answers depend on the available knowledge base.
-- It does not independently access live patient records or hospital databases.
+MediFlow AI Assistant is designed specifically for explaining the MediFlow software platform.
 
-## 🚀 Future Enhancements
+- Responses are grounded in the available project documentation.
+- The assistant may not answer questions that are outside its knowledge base.
+- It does not provide medical diagnoses, prescriptions, or treatment recommendations.
+- Generated responses should not be treated as a replacement for official platform documentation.
+
+## ☁️ Deployment
+
+The application is deployed using **Streamlit Community Cloud**.
+
+- **Live Application:** https://mediflow-rag-assistant.streamlit.app/
+- **Source Code:** https://github.com/syneadityaa/MediFlow-RAG-Assistant
+
+The Gemini API key is configured through Streamlit Secrets rather than being stored in the public repository.
+
+## 🔮 Future Enhancements
+
+Potential areas for future development:
 
 - Integration with the main MediFlow application.
-- Improved retrieval accuracy.
-- Source references for generated answers.
-- Conversation history and context retention.
-- Authentication-aware access to application information.
-
-## 🎯 Objective
-
-This project explores how Large Language Models and Retrieval-Augmented Generation can be used to build application-specific AI assistants.
-
-It demonstrates how semantic retrieval and generative AI can work together to provide contextual answers from a controlled knowledge base.
+- More advanced conversational memory and contextual retrieval.
+- Improved document management and knowledge-base updates.
+- Enhanced retrieval accuracy and response evaluation.
+- Additional interactive workflow visualizations.
 
 ## 👨‍💻 Author
 
 **Aditya Raj**
 
-B.Tech – Computer Science and Engineering (AI & ML)
+B.Tech – Computer Science & Artificial Intelligence and Machine Learning
 
 GitHub: [@syneadityaa](https://github.com/syneadityaa)
 
 ---
 
-*An AI extension to the MediFlow Smart Medical Appointment and Queue Optimization project.*
+<p align="center">
+  <strong>Built with Python, RAG, and Google Gemini ❤️</strong>
+  <br/>
+  <em>Making MediFlow easier to understand, one question at a time.</em>
+</p>
